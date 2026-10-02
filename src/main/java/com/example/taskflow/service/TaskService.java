@@ -38,36 +38,50 @@ public class TaskService {
                 .orElseGet(() -> taskRepository.findByUser(user));
     }
 
-    // 2. שמירת משימה ושליחת אירוע ל-Kafka
+    // 2. שמירת משימה ושליחת אירוע יצירה ל-Kafka
     public Task createTaskForUser(Task task, String username) {
         AppUser user = getUserByUsername(username);
         task.setUser(user);
 
-        // כאן מוגדר המשתנה saved שמחזיק את המשימה השמורה עם ה-ID שנוצר
+        // שמירת המשימה במסד הנתונים
         Task saved = taskRepository.save(task);
 
-        // שליחת אירוע ל-Kafka בזמן אמת
+        // שליחת אירוע יצירה ל-Kafka בזמן אמת
         taskEventProducer.publishTaskCreatedEvent(saved.getId(), saved.getTitle(), saved.getDescription(), username);
 
         return saved;
     }
 
-    // 3. עדכון משימה
+    // 3. עדכון משימה ושליחת אירוע עדכון ל-Kafka (לסנכרון מיידי ב-WebSocket/Kanban)
     public Optional<Task> updateTaskForUser(Long id, Task updatedTask, String username) {
         AppUser user = getUserByUsername(username);
         return taskRepository.findByIdAndUser(id, user).map(existing -> {
             existing.setTitle(updatedTask.getTitle());
             existing.setDescription(updatedTask.getDescription());
             existing.setCompleted(updatedTask.isCompleted());
-            return taskRepository.save(existing);
+
+            Task saved = taskRepository.save(existing);
+
+            // שליחת אירוע עדכון ל-Kafka
+            taskEventProducer.publishTaskUpdatedEvent(
+                    saved.getId(),
+                    saved.getTitle(),
+                    saved.getDescription(),
+                    saved.isCompleted(),
+                    username
+            );
+
+            return saved;
         });
     }
 
-    // 4. מחיקת משימה
+    // 4. מחיקת משימה ושליחת אירוע מחיקה ל-Kafka
     public boolean deleteTaskForUser(Long id, String username) {
         AppUser user = getUserByUsername(username);
         return taskRepository.findByIdAndUser(id, user).map(task -> {
             taskRepository.delete(task);
+
+            // שליחת אירוע מחיקה ל-Kafka
             taskEventProducer.publishTaskDeletedEvent(id, username);
             return true;
         }).orElse(false);

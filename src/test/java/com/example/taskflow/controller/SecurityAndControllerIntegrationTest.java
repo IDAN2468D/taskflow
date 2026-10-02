@@ -27,9 +27,9 @@ public class SecurityAndControllerIntegrationTest {
     }
 
     @Test
-    @DisplayName("אימות אבטחה: דף הבית פתוח לכולם ללא Token")
-    void testHomePage_IsPermitted() throws Exception {
-        mockMvc.perform(get("/index.html"))
+    @DisplayName("אימות אבטחה: נקודת קצה ציבורית פתוחה לכולם ללא Token")
+    void testPublicEndpoint_IsPermitted() throws Exception {
+        mockMvc.perform(get("/v3/api-docs"))
                 .andExpect(status().isOk());
     }
 

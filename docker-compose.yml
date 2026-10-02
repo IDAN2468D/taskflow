@@ -70,6 +70,16 @@ services:
     ports:
       - "9200:9200"
     restart: unless-stopped
-
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: taskflow-frontend
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:8080/api
+    depends_on:
+      - app # וודא שזה תואם לשם השירות של ה-Java שלך (app או backend)
 volumes:
   taskflow_pgdata:
