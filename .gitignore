@@ -1,0 +1,24 @@
+# 1. קובצי קומפילציה ובנייה של Java (גדולים ואינם צריכים לעלות)
+target/
+*.jar
+*.class
+
+# 2. קובצי סביבת הפיתוח (IntelliJ / VS Code)
+.idea/
+*.iml
+.vscode/
+
+# 3. קבצים זמניים ומסד נתונים מקומי
+uploads/
+data/
+*.log
+
+# 4. אבטחה וסודות: מניעת הדלפת מפתחות API (כמו Gemini) ל-GitHub!
+.env
+*.env
+application-local.properties
+secrets.properties
+
+# 5. קובצי מערכת הפעלה
+.DS_Store
+Thumbs.db

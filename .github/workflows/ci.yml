@@ -1,0 +1,47 @@
+name: TaskFlow CI/CD Pipeline
+
+on:
+  push:
+    branches: [ "main", "master" ]
+  pull_request:
+    branches: [ "main", "master" ]
+
+jobs:
+  # 1. שלב הבדיקות האוטומטיות (Continuous Integration)
+  test-and-build:
+    name: Run Tests & Build JAR
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Java 17 (Temurin)
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: maven
+
+      - name: Run Unit & Integration Tests
+        run: mvn clean test
+
+      - name: Package Application
+        run: mvn package -DskipTests
+
+  # 2. שלב הדוקר (Continuous Delivery) - רץ רק אם כל הטסטים עברו בהצלחה!
+  docker-build:
+    name: Build Docker Image
+    needs: test-and-build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Docker Image
+        run: |
+          docker build -t taskflow:latest .
