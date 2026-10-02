@@ -17,12 +17,22 @@ public class TaskService {
     private final UserRepository userRepository;
     private final TaskEventProducer taskEventProducer;
 
+
+    // הוסף את השדות האלה למחלקה:
+    private final GeminiEmbeddingService geminiEmbeddingService;
+    private final org.springframework.data.elasticsearch.core.ElasticsearchOperations elasticsearchOperations;
+
+    // עדכן את ה-Constructor של TaskService שיקבל גם אותם:
     public TaskService(TaskRepository taskRepository,
                        UserRepository userRepository,
-                       TaskEventProducer taskEventProducer) {
+                       TaskEventProducer taskEventProducer,
+                       GeminiEmbeddingService geminiEmbeddingService,
+                       org.springframework.data.elasticsearch.core.ElasticsearchOperations elasticsearchOperations) {
         this.taskRepository = taskRepository;
         this.userRepository = userRepository;
         this.taskEventProducer = taskEventProducer;
+        this.geminiEmbeddingService = geminiEmbeddingService;
+        this.elasticsearchOperations = elasticsearchOperations;
     }
 
     private AppUser getUserByUsername(String username) {
@@ -48,6 +58,25 @@ public class TaskService {
 
         // שליחת אירוע יצירה ל-Kafka בזמן אמת
         taskEventProducer.publishTaskCreatedEvent(saved.getId(), saved.getTitle(), saved.getDescription(), username);
+
+        // הפקת וקטור סמנטי (768 ממדים) ושמירה ב-Elasticsearch
+        try {
+            List<Float> embedding = geminiEmbeddingService.generateEmbedding(
+                    saved.getTitle() + " " + (saved.getDescription() != null ? saved.getDescription() : "")
+            );
+            com.example.taskflow.model.search.TaskDocument doc = new com.example.taskflow.model.search.TaskDocument(
+                    saved.getId().toString(),
+                    saved.getTitle(),
+                    saved.getDescription(),
+                    saved.isCompleted() ? "DONE" : "IN_PROGRESS",
+                    "MEDIUM",
+                    username,
+                    embedding
+            );
+            elasticsearchOperations.save(doc);
+        } catch (Exception e) {
+            // מונע נפילה אם יש בעיה רגעית ב-Elasticsearch
+        }
 
         return saved;
     }
