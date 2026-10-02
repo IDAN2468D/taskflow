@@ -3,30 +3,42 @@
 @tailwind utilities;
 
 :root {
-  --background: 210 40% 98%;
-  --foreground: 222 47% 11%;
-  --card: 0 0% 100%;
-  --card-foreground: 222 47% 11%;
+  --background: 222 47% 7%;
+  --foreground: 210 40% 98%;
 }
 
 body {
-  color: hsl(var(--foreground));
-  background: hsl(var(--background));
+  color: #f8fafc;
+  background-color: #0b0f17;
   font-feature-settings: "rlig" 1, "calt" 1;
 }
 
-/* Custom scrollbars for clean Kanban board experience */
+/* אפקט זכוכית חלבית (Glassmorphism Card) */
+.glass-panel {
+  background: rgba(15, 23, 42, 0.75);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.glass-panel-hover:hover {
+  background: rgba(30, 41, 59, 0.85);
+  border-color: rgba(99, 102, 241, 0.4);
+  box-shadow: 0 10px 30px -10px rgba(79, 70, 229, 0.15);
+}
+
+/* פס גלילה דק ומעוצב */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 5px;
+  height: 5px;
 }
 ::-webkit-scrollbar-track {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
+  background: #334155;
   border-radius: 9999px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
+  background: #475569;
 }

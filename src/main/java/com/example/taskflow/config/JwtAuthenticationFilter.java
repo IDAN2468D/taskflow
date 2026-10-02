@@ -23,6 +23,15 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         this.jwtService = jwtService;
     }
 
+    /**
+     * מורה לפילטר ה-JWT לדלג על נתיבי MCP, AI והתחברות ללא בדיקת Token
+     */
+    @Override
+    protected boolean shouldNotFilter(HttpServletRequest request) {
+        String path = request.getRequestURI();
+        return path.startsWith("/api/mcp") || path.startsWith("/api/ai") || path.startsWith("/api/auth");
+    }
+
     @Override
     protected void doFilterInternal(HttpServletRequest request,
                                     HttpServletResponse response,
@@ -36,11 +45,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             return;
         }
 
-        final String jwt = authHeader.substring(7); // חיתוך המילה Bearer והרווח
+        final String jwt = authHeader.substring(7);
         try {
             final String username = jwtService.extractUsername(jwt);
 
-            // אם נמצא שם משתמש והוא טרם אומת ב-Context
             if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
                 if (jwtService.isTokenValid(jwt, username)) {
                     UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(

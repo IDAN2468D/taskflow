@@ -8,11 +8,13 @@ import org.springframework.http.HttpMethod;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.annotation.web.configurers.HeadersConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -29,6 +31,20 @@ public class SecurityConfig {
         this.jwtAuthFilter = jwtAuthFilter;
     }
 
+    /**
+     * מחריג לחלוטין את שרת ה-MCP וסוכן ה-AI מכל בדיקות האבטחה והפילטרים של Spring Security.
+     * פותר שגיאות 403 Forbidden בבקשות POST ל-MCP.
+     */
+    @Bean
+    public WebSecurityCustomizer webSecurityCustomizer() {
+        return web -> web.ignoring().requestMatchers(
+                new AntPathRequestMatcher("/api/mcp"),
+                new AntPathRequestMatcher("/api/mcp/**"),
+                new AntPathRequestMatcher("/api/ai"),
+                new AntPathRequestMatcher("/api/ai/**")
+        );
+    }
+
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
@@ -37,7 +53,7 @@ public class SecurityConfig {
                 .headers(headers -> headers.frameOptions(HeadersConfigurer.FrameOptionsConfig::disable))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        // 1. הוספת אישור לניתוב פנימי (FORWARD) - זה מה שפותר את ה-403 בדף הבית!
+                        // 1. הוספת אישור לניתוב פנימי (FORWARD)
                         .dispatcherTypeMatchers(DispatcherType.FORWARD, DispatcherType.ERROR).permitAll()
 
                         // 2. אישור לכל הקבצים הסטטיים של האפליקציה (CSS, JS, תמונות)
@@ -46,20 +62,24 @@ public class SecurityConfig {
                         // 3. אישור לבקשות preflight (OPTIONS)
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
 
-                        // 4. אישור לדף הבית, להתחברות, ל-H2 ול-Swagger
+                        // 4. אישור מפורש לכל הנתיבים הציבוריים
                         .requestMatchers(
-                                "/",
-                                "/index.html",
-                                "/api/auth/**",
-                                "/h2-console/**",
-                                "/swagger-ui/**",
-                                "/v3/api-docs/**",
-                                "/swagger-ui.html",
-                                "/ws/**"
+                                new AntPathRequestMatcher("/"),
+                                new AntPathRequestMatcher("/index.html"),
+                                new AntPathRequestMatcher("/api/auth/**"),
+                                new AntPathRequestMatcher("/api/mcp"),
+                                new AntPathRequestMatcher("/api/mcp/**"),
+                                new AntPathRequestMatcher("/api/ai"),
+                                new AntPathRequestMatcher("/api/ai/**"),
+                                new AntPathRequestMatcher("/h2-console/**"),
+                                new AntPathRequestMatcher("/swagger-ui/**"),
+                                new AntPathRequestMatcher("/v3/api-docs/**"),
+                                new AntPathRequestMatcher("/swagger-ui.html"),
+                                new AntPathRequestMatcher("/ws/**")
                         ).permitAll()
 
-                        // 5. רק המשימות עצמן דורשות Token מאומת
-                        .requestMatchers("/api/tasks/**").authenticated()
+                        // 5. רק ניהול המשימות דורש Token מאומת
+                        .requestMatchers(new AntPathRequestMatcher("/api/tasks/**")).authenticated()
 
                         .anyRequest().authenticated()
                 )

@@ -3,7 +3,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { Sidebar } from '@/components/layout/sidebar';
 import { Header } from '@/components/layout/header';
-import { TaskModal } from '@/components/tasks/task-modal';
+import TaskModal from '@/components/tasks/task-modal';
 import { Task, CreateTaskRequest, GeminiSuggestion, UpdateTaskRequest } from '@/types';
 import { api } from '@/lib/api';
 import Link from 'next/link';

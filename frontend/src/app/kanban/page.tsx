@@ -3,8 +3,8 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { Sidebar } from '@/components/layout/sidebar';
 import { Header } from '@/components/layout/header';
-import { KanbanBoard } from '@/components/kanban/kanban-board';
-import { TaskModal } from '@/components/tasks/task-modal';
+import KanbanBoard from '@/components/kanban/kanban-board';
+import TaskModal from '@/components/tasks/task-modal';
 import { Task, TaskStatus, CreateTaskRequest, UpdateTaskRequest } from '@/types';
 import { api } from '@/lib/api';
 

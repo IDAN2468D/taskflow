@@ -14,7 +14,7 @@ interface TaskModalProps {
   initialStatus?: TaskStatus;
 }
 
-export function TaskModal({
+function TaskModal({
   isOpen,
   onClose,
   onSubmit,
@@ -424,3 +424,5 @@ export function TaskModal({
     </div>
   );
 }
+
+export default TaskModal
